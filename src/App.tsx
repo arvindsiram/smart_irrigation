@@ -90,7 +90,7 @@ function App() {
         setAlerts(newAlerts);
       }
 
-      saveSensorReading(data);
+      //saveSensorReading(data);
     },
     [thresholds]
   );
@@ -151,7 +151,7 @@ function App() {
       }
     };
 
-    loadData();
+    /loadData();
   }, []);
 
   const isPumpOn = sensorData.waterPump === 1;
