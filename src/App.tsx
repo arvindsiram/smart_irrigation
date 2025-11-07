@@ -151,7 +151,7 @@ function App() {
       }
     };
 
-    /loadData();
+    //loadData();
   }, []);
 
   const isPumpOn = sensorData.waterPump === 1;
