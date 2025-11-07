@@ -108,15 +108,20 @@ function App() {
     try {
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
-      const sensorRef = ref(database, '/');
+      // Make sure this path ('/') matches your Firebase Realtime Database
+      const sensorRef = ref(database, '/'); 
 
       const unsubscribe = onValue(
         sensorRef,
         (snapshot) => {
           const data = snapshot.val();
+          
+          // --- THIS IS THE NEW LINE ---
+          console.log('Firebase data received:', data); 
+          // --- END NEW LINE ---
+
           if (data) {
             
-            // --- THIS IS THE SNIPPET I CHANGED ---
             // Handle "on"/"off" or 1/0 for water pump, checking both camelCase and snake_case
             const pumpValue = data.waterPump || data.water_pump; // Check for both
             const newWaterPumpValue = (pumpValue === "on" || pumpValue === 1) ? 1 : 0;
@@ -130,21 +135,32 @@ function App() {
               phLevel: data.phLevel || 0,
               flowRate: data.flowRate || 0,
             });
-            // --- END OF THE SNIPPET I CHANGED ---
+            // --- MODIFICATION END ---
             
           } else {
             // No data at 'sensors' path
-             setError('Connected to Firebase, but no data found at the "sensors" path.');
+             setError('Connected to Firebase, but no data found at the root path.');
           }
         },
+        (error) => {
+           // Check for specific Firebase errors
+          if (error.code === 'PERMISSION_DENIED') {
+            setError('Firebase connection error: Permission denied. Please check your Realtime Database security rules.');
+          } else {
+            setError('Firebase connection error. Please check your configuration and security rules.');
+          }
+          console.error('Firebase error:', error);
+        }
+      );
 
+      // This is the correct location for the cleanup function
       return () => unsubscribe();
+
     } catch (err) {
-      setError('Failed to initialize Firebase. Please add your configuration.');
+      setError('Failed to initialize Firebase. Please double-check the configuration.');
       console.error('Firebase initialization error:', err);
     }
   }, [useMockData, updateSensorData]);
-
   useEffect(() => {
     const loadData = async () => {
       try {
