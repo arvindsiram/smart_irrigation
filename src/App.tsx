@@ -294,8 +294,9 @@ function App() {
           if (data && typeof data === 'object') {
             
             // --- MODIFICATION START ---
-            // Your data is a list of objects. Get the keys.
-            const keys = Object.keys(data);
+            // Filter keys to *only* include Firebase push IDs (which start with '-O')
+            const keys = Object.keys(data).filter(key => key.startsWith('-O'));
+            
             if (keys.length === 0) {
               setError('Connected, but no sensor readings found in SmartIrrigation.');
               return;
@@ -305,16 +306,18 @@ function App() {
             const latestKey = keys[keys.length - 1];
             const latestData = data[latestKey];
 
+            // If latestData is still not an object, something is wrong
+            if (!latestData || typeof latestData !== 'object') {
+              setError('Found latest reading, but data is in an unexpected format.');
+              return;
+            }
+
             // Map your hardware keys (Temperature, Moisture, etc.) to the app's keys
             
-            // --- FIX: Corrected Soil Moisture formula ---
-            // As per your screenshot, 4095 (from log) = 100% (on UI).
-            // This means we just need the direct percentage.
+            // Per your screenshot, 4095 = 100% (wet)
             const soilMoistureValue = latestData.Moisture || 0;
             const soilMoisturePercent = Math.max(0, Math.min(100, (soilMoistureValue / 4095 * 100)));
 
-            // --- NEW DEBUGGING LOG ---
-            // Let's create the object *before* updating state
             const dataToUpdate = {
               waterPump: (latestData.PumpState === "ON" || latestData.PumpState === 1) ? 1 : 0,
               soilMoisture: Math.round(soilMoisturePercent),
@@ -323,10 +326,8 @@ function App() {
               phLevel: latestData.pH || 0,
               flowRate: latestData.FlowRate || 0,
             };
-
-            // This will show us the *exact* values being sent to the UI state
-            console.log('Data being sent to UI:', dataToUpdate);
-            // --- END NEW DEBUGGING LOG ---
+            
+            console.log('Final Data being sent to UI:', dataToUpdate);
 
             updateSensorData(dataToUpdate);
             // --- MODIFICATION END ---
