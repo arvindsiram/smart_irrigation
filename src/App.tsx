@@ -115,21 +115,28 @@ function App() {
         (snapshot) => {
           const data = snapshot.val();
           if (data) {
+            
+            // --- THIS IS THE SNIPPET I CHANGED ---
+            // Handle "on"/"off" or 1/0 for water pump, checking both camelCase and snake_case
+            const pumpValue = data.waterPump || data.water_pump; // Check for both
+            const newWaterPumpValue = (pumpValue === "on" || pumpValue === 1) ? 1 : 0;
+            
+            // Revert to all camelCase keys for sensors, which is standard
             updateSensorData({
-              waterPump: data.waterPump || 0,
+              waterPump: newWaterPumpValue,
               soilMoisture: data.soilMoisture || 0,
               temperature: data.temperature || 0,
               humidity: data.humidity || 0,
               phLevel: data.phLevel || 0,
               flowRate: data.flowRate || 0,
             });
+            // --- END OF THE SNIPPET I CHANGED ---
+            
+          } else {
+            // No data at 'sensors' path
+             setError('Connected to Firebase, but no data found at the "sensors" path.');
           }
         },
-        (error) => {
-          setError('Firebase connection error. Please check your configuration.');
-          console.error('Firebase error:', error);
-        }
-      );
 
       return () => unsubscribe();
     } catch (err) {
