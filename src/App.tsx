@@ -305,32 +305,19 @@ function App() {
             const latestKey = keys[keys.length - 1];
             const latestData = data[latestKey];
 
-            // --- NEW DEBUG LINE ---
-            // Let's see the exact keys from the latest object
-            console.log('Keys in latest data:', Object.keys(latestData));
-            // --- END NEW DEBUG LINE ---
-
-
             // Map your hardware keys (Temperature, Moisture, etc.) to the app's keys
             
-            const soilMoistureValue = latestData.Moisture || latestData.moisture || 0;
-            const soilMoisturePercent = Math.max(0, Math.min(100, (soilMoistureValue / 4095 * 100)));
-
-            // --- MODIFICATION: Made all lookups case-insensitive ---
-            const pumpValue = latestData.PumpState || latestData.pumpState;
-            const tempValue = latestData.Temperature || latestData.temperature;
-            const humidityValue = latestData.Humidity || latestData.humidity;
-            const phValue = latestData.pH || latestData.ph;
-            const flowValue = latestData.FlowRate || latestData.flowRate;
-
+            // Map 0-4095 range to 100-0% (assuming 4095 is 0% moisture - very dry)
+            const soilMoistureValue = latestData.Moisture || 0;
+            const soilMoisturePercent = Math.max(0, Math.min(100, 100 - (soilMoistureValue / 4095 * 100)));
 
             updateSensorData({
-              waterPump: (pumpValue === "ON" || pumpValue === 1) ? 1 : 0,
-              soilMoisture: Math.round(soilMoisturePercent),
-              temperature: tempValue || 0,
-              humidity: humidityValue || 0,
-              phLevel: phValue || 0,
-              flowRate: flowValue || 0,
+              waterPump: (latestData.PumpState === "ON" || latestData.PumpState === 1) ? 1 : 0,
+              soilMoisture: Math.round(soilMoisturePercent), // Use the mapped percentage
+              temperature: latestData.Temperature || 0,
+              humidity: latestData.Humidity || 0,
+              phLevel: latestData.pH || 0,
+              flowRate: latestData.FlowRate || 0,
             });
             // --- MODIFICATION END ---
             
