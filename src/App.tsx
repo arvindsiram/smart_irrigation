@@ -282,7 +282,7 @@ function App() {
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
       // Make sure this path ('sensors') matches your Firebase Realtime Database
-      const sensorRef = ref(database, 'sensors'); 
+      const sensorRef = ref(database, '/'); 
 
       const unsubscribe = onValue(
         sensorRef,
