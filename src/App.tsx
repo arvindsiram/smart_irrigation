@@ -13,184 +13,15 @@ import {
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue } from 'firebase/database';
-
-// --- Placeholder/Mock Implementations ---
-// The following components and functions were imported from external files.
-// They are mocked here to make this a single, runnable file.
-
-// The Alert type was implicitly imported from AlertSystem
-interface Alert {
-  id: string;
-  type: 'error' | 'warning';
-  message: string;
-}
-
-// from ./components/ChartView
-const ChartView = ({ readings }: { readings: Reading[] }) => {
-  return (
-    <div className="bg-white border-2 border-gray-200 rounded-lg p-6 shadow-sm h-64">
-      <h3 className="text-gray-700 font-semibold text-xl mb-4">Sensor History</h3>
-      <p className="text-gray-500">Chart view placeholder. {readings.length} readings loaded.</p>
-      {/* A real chart library like Recharts would be integrated here */}
-    </div>
-  );
-};
-
-// from ./components/AlertSystem
-const checkThresholds = (data: SensorData, thresholds: any[]): Alert[] => {
-  const newAlerts: Alert[] = [];
-  
-  // Example check logic:
-  const tempThreshold = thresholds.find(t => t.sensor_type === 'temperature');
-  if (tempThreshold && data.temperature > tempThreshold.max_value) {
-    newAlerts.push({ 
-      id: 'temp_high', 
-      type: 'error', 
-      message: `Temperature is critical: ${data.temperature}°C (Max: ${tempThreshold.max_value}°C)` 
-    });
-  }
-  
-  // Add more checks for other sensors (soilMoisture, phLevel, etc.)
-  
-  return newAlerts;
-};
-
-const AlertSystem = ({ alerts, onDismiss }: { alerts: Alert[], onDismiss: (id: string) => void }) => {
-  if (alerts.length === 0) return null;
-  return (
-    <div className="fixed bottom-4 right-4 space-y-2 w-80 z-50">
-      {alerts.map(alert => (
-        <div key={alert.id} className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-lg animate-in fade-in slide-in-from-right">
-          <p className="font-bold">{alert.type === 'error' ? 'Critical Alert' : 'Warning'}</p>
-          <p>{alert.message}</p>
-          <button onClick={() => onDismiss(alert.id)} className="absolute top-2 right-2 text-red-500 font-bold">
-            &times;
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// from ./components/SettingsPanel
-const SettingsPanel = ({ 
-  isOpen, 
-  onClose, 
-  thresholds, 
-  onSaveThreshold, 
-  useMockData, 
-  onMockDataToggle 
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  thresholds: any[];
-  onSaveThreshold: (type: string, min: number | null, max: number | null) => void;
-  useMockData: boolean;
-  onMockDataToggle: (useMock: boolean) => void;
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose}>
-      <div 
-        className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-xl p-6 z-50 animate-in slide-in-from-right" 
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Settings</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-        </div>
-        
-        <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <label htmlFor="mockDataToggle" className="text-gray-700 font-medium">Use Mock Data</label>
-            <input
-              type="checkbox"
-              id="mockDataToggle"
-              checked={useMockData}
-              onChange={(e) => onMockDataToggle(e.target.checked)}
-              className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-700">Alert Thresholds</h3>
-            <p className="text-sm text-gray-500">Set min/max values to trigger alerts.</p>
-            {/* Example: Temperature threshold */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-600">Temperature (°C)</label>
-              <div className="flex gap-2">
-                <input type="number" placeholder="Min" className="w-full p-2 border border-gray-300 rounded-md" />
-                <input type="number" placeholder="Max" className="w-full p-2 border border-gray-300 rounded-md" />
-              </div>
-            </div>
-            {/* Add inputs for other thresholds (soil, pH) here */}
-          </div>
-
-          <button 
-            onClick={onClose} 
-            className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Save Settings
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// from ./lib/mockData
-const generateMockSensorData = (): SensorData => ({
-  waterPump: Math.random() > 0.5 ? 1 : 0,
-  soilMoisture: Math.floor(Math.random() * 60 + 20),
-  temperature: Math.floor(Math.random() * 10 + 20),
-  humidity: Math.floor(Math.random() * 50 + 30),
-  phLevel: Math.random() * 2 + 5.5,
-  flowRate: Math.random() * 2 + 0.5,
-});
-
-const getMockWeatherData = (): WeatherData => ({
-  city: 'Mockville',
-  temperature: 25,
-  humidity: 60,
-  weather: 'Sunny',
-  forecast: [
-    { date: 'Mon', temp: 26, condition: 'Sunny' },
-    { date: 'Tue', temp: 24, condition: 'Partly Cloudy' },
-    { date: 'Wed', temp: 23, condition: 'Rain' },
-  ],
-});
-
-// from ./lib/supabaseClient
-// Mocked Supabase functions. In a real app, these would make API calls.
-const getLatestReadings = async (limit: number): Promise<Reading[]> => {
-  console.log(`Mock: Fetching latest ${limit} readings...`);
-  // Return some mock historical data for the chart
-  return [
-    { created_at: '2025-11-07T09:00:00Z', soil_moisture: 50, temperature: 22, humidity: 60, ph_level: 6.5 },
-    { created_at: '2025-11-07T09:05:00Z', soil_moisture: 52, temperature: 22.1, humidity: 59, ph_level: 6.5 },
-    { created_at: '2025-11-07T09:10:00Z', soil_moisture: 51, temperature: 22.3, humidity: 58, ph_level: 6.6 },
-  ];
-};
-
-const getThresholds = async (level: string): Promise<any[]> => {
-  console.log(`Mock: Fetching thresholds for ${level}...`);
-  return [
-    { sensor_type: 'temperature', min_value: 5, max_value: 35, enabled: true },
-    { sensor_type: 'soilMoisture', min_value: 30, max_value: 80, enabled: true },
-    { sensor_type: 'phLevel', min_value: 6.0, max_value: 7.0, enabled: true },
-  ];
-};
-
-const saveSensorReading = async (data: SensorData) => {
-  // This function would normally save data to Supabase (or another DB)
-  // for historical tracking.
-  console.log('Mock: Saving sensor reading...', data);
-  return;
-};
-
-// --- End Placeholder/Mock Implementations ---
-
+import { ChartView } from './components/ChartView';
+import { AlertSystem, Alert, checkThresholds } from './components/AlertSystem';
+import { SettingsPanel } from './components/SettingsPanel';
+import { generateMockSensorData, getMockWeatherData } from './lib/mockData';
+import {
+  getLatestReadings,
+  getThresholds,
+  saveSensorReading,
+} from './lib/supabaseClient';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAYTHJ8HuxP7t-PVx094ZEpaEJ6zPSPsZQ",
@@ -204,7 +35,7 @@ const firebaseConfig = {
 };
 
 interface SensorData {
-  waterPump: number; // 0 for OFF, 1 for ON
+  waterPump: number;
   soilMoisture: number;
   temperature: number;
   humidity: number;
@@ -259,11 +90,7 @@ function App() {
         setAlerts(newAlerts);
       }
 
-      // Save reading for historical data
-      // We check if data is valid before saving
-      if (data.temperature !== 0 || data.soilMoisture !== 0) {
-         saveSensorReading(data);
-      }
+      saveSensorReading(data);
     },
     [thresholds]
   );
@@ -281,71 +108,51 @@ function App() {
     try {
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
-      // Make sure this path ('sensors') matches your Firebase Realtime Database
-      const sensorRef = ref(database, '/'); 
+      const sensorRef = ref(database, '/');
 
       const unsubscribe = onValue(
         sensorRef,
         (snapshot) => {
           const data = snapshot.val();
           if (data) {
-            
-            // --- MODIFICATION START ---
-            // Map incoming keys (snake_case) to app state (camelCase)
-            // Handle "on"/"off" or 1/0 for water pump
-            
-            // Check for "on" string or 1 number
-            const newWaterPumpValue = (data.water_pump === "on" || data.water_pump === 1) ? 1 : 0;
-            
             updateSensorData({
-              waterPump: newWaterPumpValue,
-              soilMoisture: data.soil_moisture || 0,
+              waterPump: data.waterPump || 0,
+              soilMoisture: data.soilMoisture || 0,
               temperature: data.temperature || 0,
               humidity: data.humidity || 0,
-              phLevel: data.ph_level || 0,
-              flowRate: data.flow_rate || 0,
+              phLevel: data.phLevel || 0,
+              flowRate: data.flowRate || 0,
             });
-            // --- MODIFICATION END ---
-            
-          } else {
-            // No data at 'sensors' path
-             setError('Connected to Firebase, but no data found at the "sensors" path.');
           }
         },
         (error) => {
-           // Check for specific Firebase errors
-          if (error.code === 'PERMISSION_DENIED') {
-            setError('Firebase connection error: Permission denied. Please check your Realtime Database security rules.');
-          } else {
-            setError('Firebase connection error. Please check your configuration and security rules.');
-          }
+          setError('Firebase connection error. Please check your configuration.');
           console.error('Firebase error:', error);
         }
       );
 
       return () => unsubscribe();
     } catch (err) {
-      setError('Failed to initialize Firebase. Please double-check the configuration.');
+      setError('Failed to initialize Firebase. Please add your configuration.');
       console.error('Firebase initialization error:', err);
     }
-  }, [useMockData, updateSensorData]); // updateSensorData is in the dependency array
+  }, [useMockData, updateSensorData]);
 
   useEffect(() => {
-    // Load historical data and thresholds on startup
     const loadData = async () => {
       try {
-        const readings = await getLatestReadings(24); // Get last 24 readings
+        const readings = await getLatestReadings(24);
         setHistoricalReadings(readings as Reading[]);
 
         const thresholdData = await getThresholds('public');
         setThresholds(thresholdData);
       } catch (err) {
-        console.error('Error loading initial data:', err);
+        console.error('Error loading data:', err);
       }
     };
 
     loadData();
-  }, []); // Runs once on mount
+  }, []);
 
   const isPumpOn = sensorData.waterPump === 1;
 
@@ -358,9 +165,6 @@ function App() {
     min: number | null,
     max: number | null
   ) => {
-    // This function would save thresholds, (e.g., to Supabase)
-    // For this mock, we just update local state.
-    console.log(`Saving threshold: ${type}, Min: ${min}, Max: ${max}`);
     const existing = thresholds.find((t) => t.sensor_type === type);
     if (existing) {
       const updated = thresholds.map((t) =>
@@ -376,7 +180,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 text-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <header className="flex items-center justify-between mb-8">
           <div className="text-center flex-1">
@@ -388,7 +192,6 @@ function App() {
           <button
             onClick={() => setSettingsOpen(true)}
             className="p-3 hover:bg-white rounded-lg shadow-sm transition-all"
-            aria-label="Open Settings"
           >
             <SettingsIcon className="text-blue-600" size={24} />
           </button>
@@ -396,8 +199,7 @@ function App() {
 
         {error && (
           <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded">
-            <p className="text-amber-800 font-semibold">Connection Error</p>
-            <p className="text-amber-700">{error}</p>
+            <p className="text-amber-800">{error}</p>
           </div>
         )}
 
@@ -428,6 +230,7 @@ function App() {
                 color="bg-blue-50 border-blue-200"
               />
 
+              {/* --- THIS IS THE CORRECTED LINE --- */}
               <DataCard
                 title="Temperature"
                 value={`${sensorData.temperature}°C`}
@@ -482,7 +285,6 @@ function App() {
   );
 }
 
-// --- Re-usable DataCard Component ---
 interface DataCardProps {
   title: string;
   value: string;
@@ -515,7 +317,6 @@ function DataCard({ title, value, icon, color, status }: DataCardProps) {
   );
 }
 
-// --- Re-usable FlowDataCard Component ---
 interface FlowDataCardProps {
   flowRate: number;
 }
@@ -527,29 +328,30 @@ function FlowDataCard({ flowRate }: FlowDataCardProps) {
         <h3 className="text-gray-700 font-semibold text-xl">Water Flow Rate</h3>
         <Gauge className="text-indigo-600" size={32} />
       </div>
-      <p className="text-4xl font-bold text-indigo-600 mb-2">{flowRate.toFixed(2)} L/min</p>
-
+      <p className="text-4xl font-bold text-indigo-600 mb-2">{flowRate} L/min</p>
       <p className="text-sm text-gray-600">Pump is currently active</p>
     </div>
   );
 }
 
 // --- WEATHER CARD COMPONENT (for WeatherAPI.com) ---
+
 interface WeatherCardProps {
   useMockData: boolean;
 }
 
+// Interface for WeatherAPI.com search results
 interface CitySearchResult {
   id: number;
   name: string;
   region: string;
   country: string;
-  url: string; 
+  url: string; // WeatherAPI.com uses a 'url' string as a unique-ish ID
 }
 
 function WeatherCard({ useMockData }: WeatherCardProps) {
   // --- PASTE YOUR WeatherAPI.com API KEY HERE ---
-  const API_KEY = '9119caa37253442298794843250611'; // Using the key from your code
+  const API_KEY = '9119caa37253442298794843250611';
 
   const [weather, setWeatherData] = useState<WeatherData | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -557,13 +359,14 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
+  // Fetches weather using a city name
   const fetchWeatherByCityName = useCallback(
     async (cityName: string) => {
       setIsLoading(true);
       setError('');
       setSearchResults([]);
       setSearchTerm('');
-      setWeatherData(null); 
+      setWeatherData(null); // Clear old weather data
 
       if (useMockData) {
         setWeatherData(getMockWeatherData());
@@ -578,6 +381,7 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
       }
 
       try {
+        // Get CURRENT weather and 3-DAY-FORECAST in one call
         const response = await fetch(
           `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityName}&days=3`
         );
@@ -585,6 +389,8 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
           throw new Error('Failed to fetch weather data.');
         }
         const data = await response.json();
+
+        // Process the data
         const { location, current, forecast } = data;
 
         setWeatherData({
@@ -610,11 +416,12 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
     [useMockData, API_KEY]
   );
 
+  // Fetch initial weather on load (Default: New Delhi)
   useEffect(() => {
-    // Fetch initial weather on load (Default: New Delhi)
     fetchWeatherByCityName('New Delhi');
   }, [fetchWeatherByCityName]);
 
+  // Function to search for cities
   const handleSearch = async (query: string) => {
     setSearchTerm(query);
     if (query.length < 3) {
@@ -627,6 +434,7 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
       return;
     }
 
+    // --- REAL API CALL for Search/Autocomplete ---
     setError('');
     try {
       const response = await fetch(
@@ -641,6 +449,7 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
       console.error('Search API error:', err);
       setError('Failed to search for cities.');
     }
+    // --- END REAL API CALL ---
   };
 
   return (
@@ -650,6 +459,7 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
         <CloudRain className="text-blue-500" size={32} />
       </div>
 
+      {/* --- SEARCH SECTION --- */}
       <div className="relative mb-4">
         <div className="relative">
           <input
@@ -669,7 +479,7 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
           <div className="absolute w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 z-10 max-h-48 overflow-y-auto">
             {searchResults.map((city) => (
               <button
-                key={city.id} 
+                key={city.id} // WeatherAPI provides an ID
                 onClick={() => fetchWeatherByCityName(city.name)}
                 className="block w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors"
               >
@@ -679,6 +489,7 @@ function WeatherCard({ useMockData }: WeatherCardProps) {
           </div>
         )}
       </div>
+      {/* --- END SEARCH SECTION --- */}
 
       {isLoading ? (
         <div className="flex items-center justify-center h-48">
