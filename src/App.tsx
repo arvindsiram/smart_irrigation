@@ -307,18 +307,28 @@ function App() {
 
             // Map your hardware keys (Temperature, Moisture, etc.) to the app's keys
             
-            // Map 0-4095 range to 100-0% (assuming 4095 is 0% moisture - very dry)
+            // --- FIX: Corrected Soil Moisture formula ---
+            // As per your screenshot, 4095 (from log) = 100% (on UI).
+            // This means we just need the direct percentage.
             const soilMoistureValue = latestData.Moisture || 0;
-            const soilMoisturePercent = Math.max(0, Math.min(100, 100 - (soilMoistureValue / 4095 * 100)));
+            const soilMoisturePercent = Math.max(0, Math.min(100, (soilMoistureValue / 4095 * 100)));
 
-            updateSensorData({
+            // --- NEW DEBUGGING LOG ---
+            // Let's create the object *before* updating state
+            const dataToUpdate = {
               waterPump: (latestData.PumpState === "ON" || latestData.PumpState === 1) ? 1 : 0,
-              soilMoisture: Math.round(soilMoisturePercent), // Use the mapped percentage
+              soilMoisture: Math.round(soilMoisturePercent),
               temperature: latestData.Temperature || 0,
               humidity: latestData.Humidity || 0,
               phLevel: latestData.pH || 0,
               flowRate: latestData.FlowRate || 0,
-            });
+            };
+
+            // This will show us the *exact* values being sent to the UI state
+            console.log('Data being sent to UI:', dataToUpdate);
+            // --- END NEW DEBUGGING LOG ---
+
+            updateSensorData(dataToUpdate);
             // --- MODIFICATION END ---
             
           } else {
