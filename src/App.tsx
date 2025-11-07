@@ -24,13 +24,13 @@ import {
 } from './lib/supabaseClient';
 
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  databaseURL: 'YOUR_DATABASE_URL',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: "AIzaSyAYTHJ8HuxP7t-PVx094ZEpaEJ6zPSPsZQ",
+  authDomain: "smart-irrigation-system-55048.firebaseapp.com",
+  databaseURL: "https://smart-irrigation-system-55048-default-rtdb.firebaseio.com",
+  projectId: "smart-irrigation-system-55048",
+  storageBucket: "smart-irrigation-system-55048.appspot.com",
+  messagingSenderId: "880782214282",
+  appId: "1:880782214282:web:25fa222bfa01f841e3d973"
 };
 
 interface SensorData {
