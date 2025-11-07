@@ -192,17 +192,16 @@ const saveSensorReading = async (data: SensorData) => {
 // --- End Placeholder/Mock Implementations ---
 
 
-// --- FILLED CREDENTIALS ---
 const firebaseConfig = {
   apiKey: "AIzaSyAYTHJ8HuxP7t-PVx094ZEpaEJ6zPSPsZQ",
   authDomain: "smart-irrigation-system-55048.firebaseapp.com",
   databaseURL: "https://smart-irrigation-system-55048-default-rtdb.firebaseio.com",
   projectId: "smart-irrigation-system-55048",
-  storageBucket: "smart-irrigation-system-55048.appspot.com",
+  storageBucket: "smart-irrigation-system-55048.firebasestorage.app",
   messagingSenderId: "880782214282",
-  appId: "1:880782214282:web:25fa222bfa01f841e3d973"
+  appId: "1:880782214282:web:25fa222bfa01f841e3d973",
+  measurementId: "G-V9GCCV5GXH"
 };
-// --- END FILLED CREDENTIALS ---
 
 interface SensorData {
   waterPump: number; // 0 for OFF, 1 for ON
