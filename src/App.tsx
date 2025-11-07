@@ -306,25 +306,31 @@ function App() {
             const latestData = data[latestKey];
 
             // --- NEW DEBUG LINE ---
-            // Let's see what the code thinks the latest data is
-            console.log('Latest parsed data object:', latestData);
+            // Let's see the exact keys from the latest object
+            console.log('Keys in latest data:', Object.keys(latestData));
             // --- END NEW DEBUG LINE ---
 
 
             // Map your hardware keys (Temperature, Moisture, etc.) to the app's keys
             
-            // --- FIX 1: Corrected Soil Moisture formula ---
-            // Assuming 4095 is 100% moisture (wet) and 0 is 0% (dry)
-            const soilMoistureValue = latestData.Moisture || 0;
+            const soilMoistureValue = latestData.Moisture || latestData.moisture || 0;
             const soilMoisturePercent = Math.max(0, Math.min(100, (soilMoistureValue / 4095 * 100)));
 
+            // --- MODIFICATION: Made all lookups case-insensitive ---
+            const pumpValue = latestData.PumpState || latestData.pumpState;
+            const tempValue = latestData.Temperature || latestData.temperature;
+            const humidityValue = latestData.Humidity || latestData.humidity;
+            const phValue = latestData.pH || latestData.ph;
+            const flowValue = latestData.FlowRate || latestData.flowRate;
+
+
             updateSensorData({
-              waterPump: (latestData.PumpState === "ON" || latestData.PumpState === 1) ? 1 : 0,
-              soilMoisture: Math.round(soilMoisturePercent), // Use the mapped percentage
-              temperature: latestData.Temperature || 0,
-              humidity: latestData.Humidity || 0,
-              phLevel: latestData.pH || 0,
-              flowRate: latestData.FlowRate || 0,
+              waterPump: (pumpValue === "ON" || pumpValue === 1) ? 1 : 0,
+              soilMoisture: Math.round(soilMoisturePercent),
+              temperature: tempValue || 0,
+              humidity: humidityValue || 0,
+              phLevel: phValue || 0,
+              flowRate: flowValue || 0,
             });
             // --- MODIFICATION END ---
             
