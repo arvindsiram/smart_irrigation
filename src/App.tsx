@@ -305,11 +305,18 @@ function App() {
             const latestKey = keys[keys.length - 1];
             const latestData = data[latestKey];
 
+            // --- NEW DEBUG LINE ---
+            // Let's see what the code thinks the latest data is
+            console.log('Latest parsed data object:', latestData);
+            // --- END NEW DEBUG LINE ---
+
+
             // Map your hardware keys (Temperature, Moisture, etc.) to the app's keys
             
-            // Map 0-4095 range to 100-0% (assuming 4095 is 0% moisture - very dry)
+            // --- FIX 1: Corrected Soil Moisture formula ---
+            // Assuming 4095 is 100% moisture (wet) and 0 is 0% (dry)
             const soilMoistureValue = latestData.Moisture || 0;
-            const soilMoisturePercent = Math.max(0, Math.min(100, 100 - (soilMoistureValue / 4095 * 100)));
+            const soilMoisturePercent = Math.max(0, Math.min(100, (soilMoistureValue / 4095 * 100)));
 
             updateSensorData({
               waterPump: (latestData.PumpState === "ON" || latestData.PumpState === 1) ? 1 : 0,
